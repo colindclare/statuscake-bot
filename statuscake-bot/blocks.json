@@ -1,0 +1,37 @@
+{
+"help_message": {
+    "blocks": [
+      {
+        "type": "section",
+        "text": {
+          "type": "mrkdwn",
+          "text": "Hi! I'm StatusCake Bot. I'm here to help you interact with StatusCake uptime tests, so you can pause them during investigations or maintenance windows. I take the following positional arguments:"
+        }
+      },
+      {
+        "type": "section",
+        "text": {
+            "type": "mrkdwn",
+            "text": "`/statuscake {command} [domain_name] [interval]`"
+        }
+      },
+      {
+        "type": "section",
+        "text": {
+            "type": "mrkdwn",
+            "text": "`command` : The action you want me to take. Can be:\n    *pause* -- Pause an uptime test.\n    *resume* -- Resumes a paused uptime test.\n    *list* -- Lists currently paused uptime tests.\n    *help* -- Prints this message\n\n`domain_name` : The root domain name for the site that StatusCake monitors. If I can't find an exact match, I'll try to find a subdomain that matches the name you provided and let you know about it.\n\n`interval` : How long the test should remain paused.\n -- Ex. 45s, 30m, 4h, 3d, 1w\n"
+        }
+      },
+      {
+          "type": "divider"
+      },
+      {
+        "type": "section",
+        "text": {
+          "type": "mrkdwn",
+          "text": "For assistance, or if there are any issues with my operation, please contact Colin Clare (cclare@nexcess.net)."
+        }
+      }
+    ]
+  }
+}

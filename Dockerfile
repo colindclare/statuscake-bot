@@ -31,7 +31,7 @@ USER statuscake-bot
 
 # Install application into container
 COPY . .
-RUN CI_VENV_PATH=$(pipenv --venv) && source "$CI_VENV_PATH/bin/activate"
+RUN source /.venv/bin/activate
 
 # Finally we set the entry point...
 # For now it's commented out to have no entry point and just start a container....

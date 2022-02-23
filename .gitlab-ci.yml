@@ -46,7 +46,7 @@ Tests:
     - docker
   stage: Lint and Test
   script:
-    - echo "Run UNIT tests on code here"
+    - echo "Run unittests on code here"
 
 Docker - Branch Build:
   stage: Publishing

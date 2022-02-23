@@ -6,30 +6,11 @@ import requests
 import threading
 import time
 import validators
+from config import Config
+from helpers import Helpers
 import scdb
 from slack_bolt import App
 from slack_bolt.adapter.socket_mode import SocketModeHandler
-
-# Global variables
-API_URL = 'https://api.statuscake.com/v1/uptime'
-API_TOKEN = os.environ.get('SC_TOKEN')
-AUTH_HEADERS = {'Authorization': 'Bearer ' + API_TOKEN}
-ALLOWED_ACTIONS = ['pause', 'resume', 'list']
-ENVIRONMENT = os.environ.get('SCBOT_ENV')
-SC_COMMAND = '/scbotdev' if ENVIRONMENT == 'dev' else '/statuscake'
-
-TEST_PARAMS = {
-    'tags' : 'ESG,MAPPS',
-    'matchany' : 'true',
-    'limit' : '100'
-}
-TIME_CONVERSION = {
-    's': 1,
-    'm': 60,
-    'h': 3600,
-    'd': 86400,
-    'w': 604800
-}
 
 # Pull in messages
 with open(os.path.dirname(__file__) + '/blocks.json', encoding='utf-8') as msgs:
@@ -37,11 +18,11 @@ with open(os.path.dirname(__file__) + '/blocks.json', encoding='utf-8') as msgs:
 
 # Initializes app with bot token and socket mode handler
 app = App(
-  token=os.environ.get('SLACK_BOT_TOKEN'),
-  signing_secret=os.environ.get('SLACK_SIGN_SECRET'))
+  token=Config.get_bot_token(),
+  signing_secret=Config.get_sign_secret())
 
 
-@app.command(SC_COMMAND)
+@app.command(Config.get_command())
 def statuscake_response(ack, respond, say, command):
   ack()
   arg_list = command['text'].split()
@@ -53,9 +34,9 @@ def statuscake_response(ack, respond, say, command):
 
   if validate_args(args, respond):
     sc_tests = requests.get(
-      API_URL,
-      headers=AUTH_HEADERS,
-      params=TEST_PARAMS).json()
+      Config.API_URL,
+      headers=Config.AUTH_HEADERS,
+      params=Config.TEST_PARAMS).json()
 
     paused_domains = []
 
@@ -70,15 +51,16 @@ def statuscake_response(ack, respond, say, command):
         test_domain = [x.strip() for x in test['name'].split('|')]
         if args['domain_name'] in test_domain:
           pause_url = API_URL + '/' + str(test['id'])
-
-          modify_test(pause_url, args, say, command)
-
-          test_info = set_test_info(test, args['interval'], command)
-
-          if args['action'] == 'pause':
-            scdb.add_pause(bot_cur, test_info)
-          elif args['action'] == 'resume':
-            print('scdb.delete_pause(bot_cur, test_info)')
+          if args['action'] == 'pause' and test['paused']:
+            respond(f'Test for domain {args["domain_name"]} is already paused')
+            return False
+          else:
+            modify_test(pause_url, args, say, command)
+            db_info = set_test_db_info(test, args, command)
+            if args['action'] == 'pause':
+              scdb.add_pause(bot_cur, db_info)
+            elif args['action'] == 'resume':
+              scdb.set_unpause(bot_cur, db_info)
 
         elif args['domain_name'] in test_domain[1]:
           # Checks if test was configured with a subdomain
@@ -98,6 +80,7 @@ def validate_args(args, respond):
 
   if not validators.domain(args['domain_name']) and args['action'] != 'list':
     respond(f'Improperly formatted domain name: {args["domain_name"]}.')
+    return False
 
   if args['interval'][-1] not in TIME_CONVERSION:
     respond(f'''Invalid interval: {args["interval"]}. \
@@ -119,10 +102,8 @@ def modify_test(url, args, say, command):
     pause_bool = 'false'
     pause_msg = 'Test for {0} resumed by <@{1}>.'
 
-  requests.put(
-    url,
-    headers=AUTH_HEADERS,
-    params={'paused':pause_bool})
+  pause_params = {'paused': pause_bool}
+  helpers.request_put(url, AUTH_HEADERS, pause_params)
 
   say(pause_msg.format(
     args['domain_name'],
@@ -131,19 +112,28 @@ def modify_test(url, args, say, command):
   )
 
 
-def set_test_info(test_params, interval, command):
+def set_test_db_info(test_params, args, command):
   start_time = int(time.time())
-  end_time = start_time + convert_to_seconds(interval)
+  interval = convert_to_seconds(args['interval'])
+  end_time = start_time + interval
 
-  test_info = []
-  test_info.append(test_params['id'])
-  test_info.append(test_params['name'].split('|')[1].strip())
-  test_info.append(start_time)
-  test_info.append(end_time)
-  test_info.append(command['user_name'])
-  print(test_info)
+  if args['action'] == 'resume':
+    unpause_user = command['user_name']
+    status = 'unpaused'
+  else:
+    unpause_user = 'None'
+    status = 'paused'
 
-  return tuple(test_info)
+  test_info = {}
+  test_info['test_id'] = test_params['id']
+  test_info['domain_name'] = test_params['name'].split('|')[1].strip()
+  test_info['pause_start'] = start_time
+  test_info['pause_end'] = end_time
+  test_info['status'] = status
+  test_info['paused_by'] = command['user_name']
+  test_info['unpaused_by'] = unpause_user
+
+  return test_info
 
 # Start your app
 if __name__ == '__main__':
@@ -153,7 +143,7 @@ if __name__ == '__main__':
   clean_cur = scdb.get_cursor()
 
   # Start cleanup thread
-  # cleanup = threading.Thread(target=scdb.clean_pauses, args=(clean_cur,))
-  # cleanup.start()
+  cleanup = threading.Thread(target=scdb.clean_exp_pauses, args=(clean_cur,))
+  cleanup.start()
 
-  SocketModeHandler(app, os.environ['SLACK_APP_TOKEN']).start()
+  SocketModeHandler(app, Config.get_app_token()).start()

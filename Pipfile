@@ -8,6 +8,12 @@ slack-bolt = "==1.11.2"
 requests = "==2.27.1"
 mariadb = "==1.0.9"
 validators = "==0.18.2"
+pylint = "==2.12.2"
+yapf = "==0.32.0"
+platformdirs = "==2.4.0"
+setuptools = "==39.2.0"
+mysqlclient = "*"
+sqlalchemy = "*"
 
 [dev-packages]
 

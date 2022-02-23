@@ -1,0 +1,33 @@
+version: '3'
+services:
+    scbot-python:
+      environment:
+        - SLACK_APP_TOKEN='<slack_app_token>'
+        - SLACK_BOT_TOKEN='<slack_bot_token>'
+        - DB_MYSQL_HOST=db_host
+        - DB_MYSQL_USER=db_user
+        - DB_MYSQL_PASSWORD=db_password
+      build:
+        context: ./
+        dockerfile: Dockerfile
+      image: scbot
+      stdin_open: true
+      tty: true
+      depends_on:
+        - scbot-db
+
+    scbot-db:
+      image: 'jc21/mariadb-aria:latest'
+      environment:
+        MYSQL_ROOT_PASSWORD: 'root_pass'
+        MYSQL_DATABASE: 'db_name'
+        MYSQL_USER: 'db_user'
+        MYSQL_PASSWORD: 'db_password'
+      stdin_open: true
+      tty: true
+      volumes:
+        - db_data:/var/lib/mysql
+        - ./scbot.sql:/docker-entrypoint-initdb.d/scbot.sql:ro
+
+volumes:
+  db_data:

@@ -33,7 +33,7 @@ before_script:
   - apk add --no-cache gcc libc-dev libffi-dev mysql mysql-dev mysql-client
   - pip install pipenv
   - pipenv install
-  - pipenv shell
+  - CI_VENV_PATH=$(pipenv --venv) && source "$CI_VENV_PATH/bin/activate"
 
 Lint:
   tags:

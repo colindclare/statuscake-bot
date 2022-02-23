@@ -1,3 +1,3 @@
 #!/bin/bash
 
-pipenv run ./statuscake-bot/bot.py
+python ./statuscake-bot/bot.py

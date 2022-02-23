@@ -9,7 +9,7 @@ ENV PYTHONFAULTHANDLER 1
 FROM base AS python-deps
 
 # First setup any dependencies at the OS level that python will want...
-RUN apk add --no-cache gcc libc-dev libffi-dev mysql mysql-dev mysql-client
+RUN apk add --no-cache gcc libc-dev libffi-dev mysql mysql-dev mysql-client bash
 RUN pip install --upgrade pip
 RUN pip install pipenv
 
@@ -31,8 +31,9 @@ USER statuscake-bot
 
 # Install application into container
 COPY . .
+RUN source /.venv/bin/activate
 
 # Finally we set the entry point...
 # For now it's commented out to have no entry point and just start a container....
 # CMD ["/usr/local/bin/python", "kudo.py"]
-ENTRYPOINT [ "run-scbot.sh" ]
+ENTRYPOINT ["sh", "/home/statuscake-bot/run-scbot.sh" ]

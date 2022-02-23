@@ -30,6 +30,7 @@ cache:
 
 before_script:
   - python --version  # For debugging
+  - apk add --no-cache gcc libc-dev libffi-dev mysql mysql-dev mysql-client
   - pip install pipenv
   - pipenv install
   - pipenv shell

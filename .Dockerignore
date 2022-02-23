@@ -1,1 +1,9 @@
-.gitlab-ci.yml
+# Ignore everything
+**
+
+# ... except for dependencies and source
+!Pipfile
+!Pipfile.lock
+!statuscake-bot/
+!run-scbot.sh
+!scbot.sql

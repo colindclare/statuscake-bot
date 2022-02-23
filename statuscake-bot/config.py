@@ -1,7 +1,9 @@
 #!/usr/bin/env python3
+'''Class for storing StatusCake bot's configurable variables'''
 import os
 
 class Config:
+  '''Config class to provide config values to other modules'''
   API_URL = 'https://api.statuscake.com/v1/uptime'
 
   API_TOKEN = os.environ.get('SC_TOKEN')

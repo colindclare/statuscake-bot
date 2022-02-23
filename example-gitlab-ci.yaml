@@ -1,0 +1,70 @@
+# To contribute improvements to CI/CD templates, please follow the Development guide at:
+# https://docs.gitlab.com/ee/development/cicd/templates.html
+# This specific template is located at:
+# https://gitlab.com/gitlab-org/gitlab/-/blob/master/lib/gitlab/ci/templates/Python.gitlab-ci.yml
+
+# Official language image. Look for the different tagged releases at:
+# https://hub.docker.com/r/library/python/tags/
+image: python:3.6.8-alpine
+
+stages:
+  - Lint and Test
+  - Security
+  - Publishing
+
+before_script:
+  - python --version  # For debugging
+  - pip install pipenv
+  - virtualenv venv
+  - source venv/bin/activate
+
+Lint:
+  tags:
+    - docker
+  stage: Lint and Test
+  script:
+    - echo "Lint code here"
+
+Tests:
+  tags:
+    - docker
+  stage: Lint and Test
+  script:
+    - echo "Run UNIT tests on code here"
+
+Docker - Branch Build:
+  stage: Publishing
+  tags:
+    - shell
+  before_script:
+    - docker login -u "$CI_REGISTRY_USER" -p "$CI_REGISTRY_PASSWORD" $CI_REGISTRY
+  script:
+    - |
+      if [[ "$CI_COMMIT_BRANCH" == "$CI_DEFAULT_BRANCH" ]]; then
+        tag=""
+        echo "Running on default branch '$CI_DEFAULT_BRANCH': tag = 'unstable'"
+      else
+        tag=":$CI_COMMIT_REF_SLUG"
+        echo "Running on branch '$CI_COMMIT_BRANCH': tag = $tag"
+      fi
+    - docker build --pull -t "$CI_REGISTRY_IMAGE${tag}" .
+    - docker push "$CI_REGISTRY_IMAGE${tag}"
+  # Run this job in a branch where a Dockerfile exists
+  rules:
+    - if: $CI_COMMIT_BRANCH
+      exists:
+        - Dockerfile
+
+Docker - Tag Build:
+  stage: Publishing
+  rules:
+    - if: $CI_COMMIT_TAG
+      exists:
+        - Dockerfile
+  tags:
+    - shell
+  before_script:
+    - docker login -u "$CI_REGISTRY_USER" -p "$CI_REGISTRY_PASSWORD" $CI_REGISTRY
+  script:
+    - docker build --pull -t "$CI_REGISTRY_IMAGE:$CI_COMMIT_REF_NAME" .
+    - docker push "$CI_REGISTRY_IMAGE:$CI_COMMIT_REF_NAME"

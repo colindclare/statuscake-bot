@@ -1,11 +1,10 @@
 #!/usr/bin/env python
+'''Database operations for StatusCake bot'''
 import os
-import sys
 import time
 import MySQLdb
 from helpers import Helpers
 from config import Config
-import requests
 
 # Add pause
 def add_pause(cur, test_info):
@@ -22,9 +21,9 @@ def add_pause(cur, test_info):
   try:
     cur.execute(sql, query_values)
     print('Added successfully!')
-  except MySQLdb._exceptions.ProgrammingError as m:
+  except MySQLdb.ProgrammingError as m:
     print(m)
-  except MySQLdb._exceptions.OperationalError as m:
+  except MySQLdb.OperationalError as m:
     print(m)
 
 # Delete pause

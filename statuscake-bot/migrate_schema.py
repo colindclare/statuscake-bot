@@ -13,7 +13,7 @@ DB_CREDS = {
   'name': os.environ.get('DB_NAME'),
 }
 
-def bootstrap_db(cur, db_name):
+def bootstrap_db(cur):
 
   cur.execute('''CREATE TABLE IF NOT EXISTS paused_tests (
     `id` int(10) unsigned NOT NULL AUTO_INCREMENT PRIMARY KEY,
@@ -28,20 +28,20 @@ def bootstrap_db(cur, db_name):
 def main():
   try:
     connection = MySQLdb.connect(
-      host = DB_CREDS['host'],
-      user = DB_CREDS['user'],
-      password = DB_CREDS['pass'],
-      port = int(DB_CREDS['port']),
+      host = os.environ['DB_HOST'],
+      user = os.environ['DB_USER'],
+      password = os.environ['DB_PASS'],
+      port = int(os.environ['DB_PORT']),
   )
-  except mariadb.Error as e:
+  except MySQLdb.Error as e:
     print(f'Error connecting to the database: {e}')
     sys.exit(1)
 
   cursor = connection.cursor()
 
   try:
-    bootstrap_db(cursor, DB_CREDS['name'])
-  except mariadb.Error as e:
+    bootstrap_db(cursor)
+  except MySQLdb.Error as e:
     print(f'Error creating database/table: {e}')
     connection.close()
     sys.exit(1)

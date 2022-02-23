@@ -50,7 +50,7 @@ def statuscake_response(ack, respond, say, command):
       for test in sc_tests['data']:
         test_domain = [x.strip() for x in test['name'].split('|')]
         if args['domain_name'] in test_domain:
-          pause_url = API_URL + '/' + str(test['id'])
+          pause_url = Config.API_URL + '/' + str(test['id'])
           if args['action'] == 'pause' and test['paused']:
             respond(f'Test for domain {args["domain_name"]} is already paused')
             return False
@@ -74,7 +74,7 @@ def validate_args(args, respond):
       blocks=MESSAGES['help_message']['blocks'])
     return False
 
-  if args['action'] not in ALLOWED_ACTIONS:
+  if args['action'] not in Config.ALLOWED_ACTIONS:
     respond(f'Invalid action: {args["action"]}. Must be one of: pause, resume')
     return False
 
@@ -82,7 +82,7 @@ def validate_args(args, respond):
     respond(f'Improperly formatted domain name: {args["domain_name"]}.')
     return False
 
-  if args['interval'][-1] not in TIME_CONVERSION:
+  if args['interval'][-1] not in Config.TIME_CONVERSION:
     respond(f'''Invalid interval: {args["interval"]}. \
                 Must be formatted as <number>[m|h|d|s|w].''')
     return False
@@ -91,7 +91,7 @@ def validate_args(args, respond):
 
 
 def convert_to_seconds(interval):
-  return int(interval[:-1]) * TIME_CONVERSION[interval[-1]]
+  return int(interval[:-1]) * Config.TIME_CONVERSION[interval[-1]]
 
 
 def modify_test(url, args, say, command):
@@ -103,7 +103,7 @@ def modify_test(url, args, say, command):
     pause_msg = 'Test for {0} resumed by <@{1}>.'
 
   pause_params = {'paused': pause_bool}
-  helpers.request_put(url, AUTH_HEADERS, pause_params)
+  Helpers.request_put(url, Config.AUTH_HEADERS, pause_params)
 
   say(pause_msg.format(
     args['domain_name'],

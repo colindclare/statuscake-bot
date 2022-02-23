@@ -25,7 +25,7 @@ COPY --from=python-deps /.venv /.venv
 ENV PATH="/.venv/bin:$PATH"
 
 # Create and switch to a new user
-RUN adduser statuscake-bot
+RUN adduser -S statuscake-bot
 WORKDIR /home/statuscake-bot
 USER statuscake-bot
 

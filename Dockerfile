@@ -9,7 +9,7 @@ ENV PYTHONFAULTHANDLER 1
 FROM base AS python-deps
 
 # First setup any dependencies at the OS level that python will want...
-RUN apk add --no-cache gcc libc-dev libffi-dev mysql mysql-dev mysql-client bash
+RUN apk add --no-cache gcc libc-dev libffi-dev mysql mysql-dev mysql-client bash mariadb-connector-c-dev
 RUN pip install --upgrade pip
 RUN pip install pipenv
 

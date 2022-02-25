@@ -25,9 +25,10 @@ COPY --from=python-deps /.venv /.venv
 ENV PATH="/.venv/bin:$PATH"
 
 # Create and switch to a new user
+RUN apk add --no-cache mysql mysql-client bash mariadb-connector-c
 RUN adduser -S statuscake-bot
 WORKDIR /home/statuscake-bot
-USER statuscake-bot
+# USER statuscake-bot
 
 # Install application into container
 COPY . .

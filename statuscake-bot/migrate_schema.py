@@ -21,7 +21,8 @@ def bootstrap_db(cur):
     `domain_name` varchar(255) NOT NULL,
     `pause_start` int(10) NOT NULL,
     `pause_end` int(10) NOT NULL,
-    `pause_user` varchar(255) NOT NULL),
+    `status` varchar(255) NOT NULL,
+    `paused_by` varchar(255) NOT NULL,
     `unpaused_by` varchar(255) NOT NULL)'''
   )
 
@@ -32,6 +33,7 @@ def main():
       user = os.environ['DB_USER'],
       password = os.environ['DB_PASS'],
       port = int(os.environ['DB_PORT']),
+      database=os.environ['DB_NAME'],
   )
   except MySQLdb.Error as e:
     print(f'Error connecting to the database: {e}')
@@ -40,6 +42,7 @@ def main():
   cursor = connection.cursor()
 
   try:
+    print('Attempting to create table paused_tests...')
     bootstrap_db(cursor)
   except MySQLdb.Error as e:
     print(f'Error creating database/table: {e}')

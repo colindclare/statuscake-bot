@@ -5,12 +5,17 @@ import os
 import requests
 import threading
 import time
+import MySQLdb
 import validators
 from config import Config
 from helpers import Helpers
+from logs import ScbotLogger
+import migrate_schema
 import scdb
 from slack_bolt import App
 from slack_bolt.adapter.socket_mode import SocketModeHandler
+
+logger = ScbotLogger('statuscake_bot')
 
 # Pull in messages
 with open(os.path.dirname(__file__) + '/blocks.json', encoding='utf-8') as msgs:
@@ -46,6 +51,7 @@ def statuscake_response(ack, respond, say, command):
         if test['paused']:
           paused_domains.append(test_domain[1])
       say('Paused tests:\n' + '\n'.join(paused_domains))
+      logger.info('LIST ' + ' '.join(paused_domains), command['user_name'])
     else:
       for test in sc_tests['data']:
         test_domain = [x.strip() for x in test['name'].split('|')]
@@ -57,10 +63,14 @@ def statuscake_response(ack, respond, say, command):
           else:
             modify_test(pause_url, args, say, command)
             db_info = set_test_db_info(test, args, command)
+
+            conn = scdb.get_connection()
+            bot_cur = conn.cursor()
             if args['action'] == 'pause':
               scdb.add_pause(bot_cur, db_info)
             elif args['action'] == 'resume':
               scdb.set_unpause(bot_cur, db_info)
+            bot_cur.close()
 
         elif args['domain_name'] in test_domain[1]:
           # Checks if test was configured with a subdomain
@@ -97,17 +107,24 @@ def convert_to_seconds(interval):
 def modify_test(url, args, say, command):
   if args['action'] == 'pause':
     pause_bool = 'true'
-    pause_msg = 'Test for {0} paused for {2} by <@{1}>.'
+    slack_msg = 'Test for {0} paused for {2} {1}.'
+    log_msg = 'PAUSE {0}, interval {1}'
   elif args['action'] == 'resume':
     pause_bool = 'false'
-    pause_msg = 'Test for {0} resumed by <@{1}>.'
+    slack_msg = 'Test for {0} resumed {1}.'
+    log_msg = 'RESUME {0}'
 
   pause_params = {'paused': pause_bool}
+  logger.info(
+    log_msg.format(args['domain_name'], args['interval']),
+    command['user_name']
+  )
+
   Helpers.request_put(url, Config.AUTH_HEADERS, pause_params)
 
-  say(pause_msg.format(
+  say(slack_msg.format(
     args['domain_name'],
-    command['user_name'],
+    f'by <@{command["user_name"]}>.',
     args['interval'])
   )
 
@@ -139,8 +156,19 @@ def set_test_db_info(test_params, args, command):
 if __name__ == '__main__':
 
   # Create MariaDB cursor
-  bot_cur = scdb.get_cursor()
   clean_cur = scdb.get_cursor()
+  no_table = True
+  while no_table:
+    try:
+      clean_cur.execute('SELECT * FROM `paused_tests`')
+      no_table = False
+    except MySQLdb.ProgrammingError as e:
+      err = e.args
+      logger.error(str(err[0]) + ' ' + err[1], 'table_setup')
+      migrate_schema.main()
+      clean_cur = scdb.get_cursor()
+      if clean_cur:
+        no_table = False
 
   # Start cleanup thread
   cleanup = threading.Thread(target=scdb.clean_exp_pauses, args=(clean_cur,))

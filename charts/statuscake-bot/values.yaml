@@ -1,0 +1,81 @@
+replicaCount: 1
+  
+namespace: statuscake-bot-dev
+nameOverride: ""
+fullnameOverride: ""
+appVersion:
+
+image:
+  repository: git.liquidweb.com:4567/Support/statuscake-bot
+  pullPolicy: Always
+  tag: latest
+
+imagePullSecrets: []
+
+serviceAccount:
+  create: true
+  name:
+
+podSecurityContext: {}
+
+securityContext: {}
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}
+
+ingress: 
+  enabled: false
+  serviceType:
+  servicePort: 5000
+  containerPort: 80
+  hosts: []
+
+resources: {}
+
+readinessProbe: {}
+
+livenessProbe: {}
+
+databaseHostEnvVar: DB_HOST
+env:
+  - name: "SLACK_APP_TOKEN"
+    value: "xapp-fdlkklakljsafklsfklsakfl"
+  - name: "SLACK_BOT_TOKEN"
+    value: "xoxb-hurr-durr-im-a-bot"
+  - name: "SLACK_SIGN_SECRET"
+    value: "slack-sign-secret"
+  - name: "SC_TOKEN"
+    value: "statuscake-token"
+  - name: "SCBOT_ENV"
+    value: "dev"
+  - name: "DB_USER"
+    value: "scbot"
+  - name: "DB_NAME"
+    value: "statuscake_bot"
+  - name: "DB_PASS"
+    value: "nnneeewwww-pppasswoorrddd"
+  - name: "DB_PORT"
+    value: 3306
+
+database:
+  image:
+    repository: mariadb
+    pullPolicy: Always
+    tag: '10.7.1-focal'
+  env:
+    - name: MARIADB_USER
+      value: "scbot"
+    - name: MARIADB_ROOT_PASSWORD
+      value: "chaaaannngggeee-meeeeeeeeee"
+    - name: MARIADB_PASSWORD
+      value: "WHHHHYYYYYYYY!!!!!!"
+    - name: MARIADB_DATABASE
+      value: "statuscake_bot"
+  containerPort: 3306
+  resources: {}
+  claimMount: /var/lib/mysql
+
+notes:

@@ -1,0 +1,19 @@
+{{- $chart_name := include "sc-bot.name" . }}
+apiVersion: v1
+kind: Service
+metadata:
+  namespace: {{ .Values.namespace }}
+  name: {{ $chart_name }}-db
+  labels:
+    app.kubernetes.io/name: database
+    {{- include "sc-bot.labels" . | nindent 4 }}
+spec:
+  type: {{ .Values.ingress.serviceType }}
+  ports:
+    - port: {{ .Values.database.containerPort }}
+      targetPort: database
+      protocol: TCP
+      name: database
+  selector:
+    app.kubernetes.io/name: database
+    {{- include "sc-bot.selectorLabels" . | nindent 4 }}

@@ -1,0 +1,19 @@
+{{- if .Values.ingress.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "sc-bot.name" . }}
+  labels:
+    app.kubernetes.io/name: app
+    {{- include "sc-bot.labels" . | nindent 4 }}
+spec:
+  type: {{ .Values.ingress.serviceType }}
+  ports:
+    - port: {{ .Values.ingress.servicePort }}
+      targetPort: {{ .Values.ingress.containerPort }}
+      protocol: TCP
+      name: http
+  selector:
+    app.kubernetes.io/name: app
+    {{- include "sc-bot.selectorLabels" . | nindent 4 }}
+{{- end }}

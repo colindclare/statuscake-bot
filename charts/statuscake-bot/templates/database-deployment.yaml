@@ -1,0 +1,42 @@
+{{- $chart_name := include "sc-bot.name" . }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  namespace: {{ .Values.namespace }}
+  name: {{ $chart_name }}-db
+  labels:
+    app.kubernetes.io/name: database
+    {{- include "sc-bot.labels" . | nindent 4 }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: database
+      {{- include "sc-bot.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: database
+        {{- include "sc-bot.selectorLabels" . | nindent 8 }}
+        checksum/values: {{ toYaml .Values | sha256sum | trunc 20 | quote }}
+    spec:
+      serviceAccountName: {{ include "sc-bot.serviceAccountName" . }}
+      containers:
+        - name: database
+          image: "{{ .Values.database.image.repository }}:{{ .Values.database.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          env:
+            {{- toYaml .Values.database.env | nindent 12 }}
+          ports:
+            - containerPort: {{ .Values.database.containerPort }}
+              protocol: TCP
+              name: database
+          resources:
+            {{- toYaml .Values.database.resources | nindent 12 }}
+          volumeMounts:
+            - mountPath: {{ .Values.database.claimMount }}
+              name: db
+      volumes:
+      - name: db
+        persistentVolumeClaim:
+          claimName: {{ .Values.database.claimName }}

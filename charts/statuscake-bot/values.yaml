@@ -1,9 +1,10 @@
+# Number of app pods to spin up during deployment
 replicaCount: 1
-  
-namespace: statuscake-bot-dev
+
+# Namespace to attach to in Mako
+namespace: sc-bot-dev
 nameOverride: ""
 fullnameOverride: ""
-appVersion:
 
 image:
   repository: git.liquidweb.com:4567/Support/statuscake-bot
@@ -14,26 +15,10 @@ imagePullSecrets: []
 
 serviceAccount:
   create: true
-  name:
-
-podSecurityContext: {}
-
-securityContext: {}
-
-nodeSelector: {}
-
-tolerations: []
-
-affinity: {}
+  name: sc-bot-dev
 
 ingress: 
   enabled: false
-  serviceType:
-  servicePort: 5000
-  containerPort: 80
-  hosts: []
-
-resources: {}
 
 readinessProbe: {}
 
